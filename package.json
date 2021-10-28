@@ -1,0 +1,128 @@
+{
+  "name": "omnivisualizer",
+  "productName": "omnivisualizer",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": ".webpack/main",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "ts-standard"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "extraResource": [
+          "./protos"
+        ]
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "omnivisualizer"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        }
+      ],
+      "plugins": [
+        [
+          "@electron-forge/plugin-webpack",
+          {
+            "mainConfig": "./webpack.main.config.js",
+            "renderer": {
+              "target": "web",
+              "config": "./webpack.renderer.config.js",
+              "entryPoints": [
+                {
+                  "html": "./src/renderer/index.html",
+                  "js": "./src/renderer/index.tsx",
+                  "name": "main_window",
+                  "preload": {
+                    "js": "./src/preload/index.ts"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      ]
+    }
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.54",
+    "@electron-forge/maker-deb": "^6.0.0-beta.54",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.54",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
+    "@electron-forge/maker-zip": "^6.0.0-beta.54",
+    "@electron-forge/plugin-webpack": "6.0.0-beta.54",
+    "@marshallofsound/webpack-asset-relocator-loader": "^0.5.0",
+    "@types/react": "^17.0.5",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-router-dom": "^5.1.7",
+    "@types/styled-components": "^5.1.9",
+    "@typescript-eslint/eslint-plugin": "^4.0.1",
+    "@typescript-eslint/parser": "^4.0.1",
+    "css-loader": "^4.2.1",
+    "electron": "12.0.6",
+    "fork-ts-checker-webpack-plugin": "^5.0.14",
+    "node-loader": "^1.0.1",
+    "style-loader": "^1.2.1",
+    "ts-loader": "^8.0.2",
+    "ts-standard": "^10.0.0",
+    "typescript": "^4.0.2"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.3.0",
+    "@grpc/proto-loader": "^0.6.1",
+    "bulma": "^0.9.3",
+    "electron-log": "^4.4.1",
+    "electron-squirrel-startup": "^1.0.0",
+    "hacktimer": "^1.1.3",
+    "protobufjs": "^6.11.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-router-dom": "^5.2.0",
+    "react-vega": "^7.4.4",
+    "styled-components": "^5.3.0",
+    "vega": "^5.21.0",
+    "vega-lite": "^5.1.1"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "out/make/squirrel.windows/x64/RELEASES",
+              "label": "RELEASES"
+            },
+            {
+              "path": "out/make/squirrel.windows/x64/omnivisualizer-*-full.nupkg",
+              "label": "omnivisualizer.nupkg"
+            },
+            {
+              "path": "out/make/squirrel.windows/x64/omnivisualizer-*Setup.exe",
+              "label": "omnivisualizer-setup.exe"
+            }
+          ]
+        }
+      ]
+    ]
+  }
+}
