@@ -20,11 +20,15 @@ let mywindow: any = window
 
 const App: React.FC = () => {
   const [bridges, setBridges] = React.useState<any>({})
+
   const [leftData, setLeftData] = React.useState<any[]>([])
-  const [leftSettings, setLeftSettings] = React.useState<any>({ channel: 0, sampleRate: 250, range: 1 })
+  const [leftSettings, setLeftSettings] = React.useState<any>({ channel: 0 })
   const [leftStartValues, setLeftStartValues] = React.useState<any>({ startTime: -100, packetNumber: -1, currentPacketTime: -100 })
 
-  const [rightData, setRightData] = React.useState<any>({ table: [] })
+  const [rightData, setRightData] = React.useState<any[]>([])
+  const [rightSettings, setRightSettings] = React.useState<any>({ channel: 0 })
+  const [rightStartValues, setRightStartValues] = React.useState<any>({ startTime: -100, packetNumber: -1, currentPacketTime: -100 })
+
 
   React.useEffect(() => {
     mywindow.appService.getBridges().then((data: any) => {
@@ -34,84 +38,74 @@ const App: React.FC = () => {
 
   const streamTimeDomains = async (direction: string) => {
     console.log(bridges)
-    mywindow.deviceManagerService.streamTimeDomains({ name: '//summit/bridge/NKW021653N', enableStream: true },
+    mywindow.deviceManagerService.streamTimeDomains({ name: direction === 'left' ? bridges.left : bridges.right, enableStream: true },
       (data: any) => {
-        //console.log(data)
-        const channel = leftSettings.channel
-        processData(data, channel)
+        const settings = direction === 'left' ? leftSettings : rightSettings
+        processData(data, settings.channel, direction)
       });
 
   }
 
-  const endStream = async () => {
-    mywindow.deviceManagerService.streamTimeDomains({ name: '//summit/bridge/NKW021653N', enableStream: false },
-      (data: any) => {
-      })
+  const endStream = async (direction: string) => {
+    mywindow.deviceManagerService.streamTimeDomains({ name: direction === 'left' ? bridges.left : bridges.right, enableStream: false }, console.log)
     await new Promise(r => setTimeout(r, 1000));
     mywindow.location.reload(false)
   }
 
-  const switchChannel = (channelNumber:number) => {
-    setLeftSettings((prev: any) => {
+  const switchChannel = (channelNumber: number, direction: string) => {
+    const setChannel = direction === 'left' ? setLeftSettings : setRightSettings
+    setChannel((prev: any) => {
       prev.channel = channelNumber
       return prev
     })
   }
 
-
   // Process streaming data and covert to data for Vega
-  const processData = (streamData: any, channel: number) => {
+  const processData = (streamData: any, channel: number, direction: string) => {
 
-    // store current packet time and packet number
+    // which device
+    const device = direction === 'left' ? bridges.left : bridges.right
+    const displayData = direction === 'left' ? leftData : rightData
+    const displayStartValues = direction === 'left' ? leftStartValues : rightStartValues
+    const setDisplayStartValues = direction === 'left' ? setLeftStartValues : setRightStartValues
+
+    if (streamData.name.includes(device)){
+      // store current packet time and packet number
     const packetTime = streamData.header.insTimestamp
     const packetNumber = streamData.header.dataTypeSequenceNumber
     // packets overflow at 255
-    var packetDifference = packetNumber - leftStartValues.packetNumber
+    var packetDifference = packetNumber - displayStartValues.packetNumber
     if (packetDifference < 0) {
       packetDifference += 254
     }
-
+    displayData.unshift({ data: [] })
+    for (let i = 0; i < 25; i++) {
+      displayData[0].data.push({ key: streamData.data[channel].channelId, time: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / 250, channelData: streamData.data[channel].channelData[i] })
+    }
     // case for same time interval
-    if (packetTime - leftStartValues.startTime < 10) {
+    if (packetTime - displayStartValues.startTime < 10) {
       // case for same second
-      if (packetTime === leftStartValues.currentPacketTime) {
-        // error for when data is pushed out first
-        
-          leftData.unshift({ data: [] })
-        for (let i = 0; i < 25; i++) {
-          leftData[0].data.push({ key: streamData.data[channel].channelId, time: leftStartValues.currentPacketTime - leftStartValues.startTime + 1 / 10 * packetDifference + i / 250, channelData: streamData.data[channel].channelData[i] })
-        }
-      }
-      else {
-        leftData.unshift({ data: [] })
-        for (let i = 0; i < 25; i++) {
-          leftData[0].data.push({ key: streamData.data[channel].channelId, time: leftStartValues.currentPacketTime - leftStartValues.startTime + 1 / 10 * packetDifference + i / 250, channelData: streamData.data[channel].channelData[i] })
-        }
-        setLeftStartValues((prev: any) => {
+      if (packetTime !== displayStartValues.currentPacketTime) {
+        setDisplayStartValues((prev: any) => {
           prev.packetNumber = packetNumber
           prev.currentPacketTime = packetTime
           return prev
         })
       }
-      //console.log("equal")
-
     }
     // case for outside time interval
     else {
-      //console.log("not equal")
-      leftData.unshift({ data: [] })
-      for (let i = 0; i < 25; i++) {
-        leftData[0].data.push({ key: streamData.data[channel].channelId, time: i / 250, channelData: streamData.data[channel].channelData[i] })
-      }
-      setLeftStartValues((prev: any) => {
+      setDisplayStartValues((prev: any) => {
         prev.startTime = packetTime
         prev.packetNumber = packetNumber
         prev.currentPacketTime = packetTime
         return prev
       })
-
     }
+    console.log(rightData)
     console.log(leftData)
+    }
+    
   }
 
 
@@ -131,7 +125,7 @@ const App: React.FC = () => {
             <Switch>
 
               <Route path='/settings'>
-                <Settings />
+                <Settings data={leftData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} startValues={leftStartValues} />
               </Route>
               <Route path='/help'>
                 <Help />
@@ -140,7 +134,7 @@ const App: React.FC = () => {
                 <Home streamTimeDomains={streamTimeDomains} endStream={endStream} />
               </Route>
               <Route path='/'>
-                <Plot data={leftData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} startValues={leftStartValues} />
+                <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} />
               </Route>
             </Switch>
           </div>

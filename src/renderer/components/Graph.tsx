@@ -3,9 +3,7 @@ import { VisualizationSpec } from 'vega-embed';
 import * as vega from 'vega';
 import React from 'react'
 
-import Graph from '../components/Graph'
-
-interface PlotProp {
+interface GraphProp {
   data: any,
   streamTimeDomains: any,
   endStream: any,
@@ -45,10 +43,9 @@ const spec: VisualizationSpec = {
 
 
 
-const Settings: React.FC<PlotProp> = ({ data, streamTimeDomains, endStream, switchChannel, startValues }) => {
+const Graph: React.FC<GraphProp> = ({ data, streamTimeDomains, switchChannel}) => {
   const [view, setView] = React.useState<View>();
   const [intervalId, setIntervalId] = React.useState<any>()
-  const [currentTime, setCurrentTime] = React.useState<any>()
 
   const startData = () => {
     streamTimeDomains("left")
@@ -57,7 +54,6 @@ const Settings: React.FC<PlotProp> = ({ data, streamTimeDomains, endStream, swit
     const dataSize = 5
     function updateGraph() {
       //console.log(data)
-      setCurrentTime((startValues.currentPacketTime + 978307200) * 1000)
       // Check if there's data from stream
       if (data.length > 0) {
         // Check if data for the current second is finished
@@ -92,14 +88,6 @@ const Settings: React.FC<PlotProp> = ({ data, streamTimeDomains, endStream, swit
 
   return (
     <div>
-      <ul>
-        <li>
-          <button className='button' onClick={startData}>Stream Left</button>
-        </li>
-        <li>
-          <button className='button' onClick={()=>endStream('left')}>End Stream Left</button>
-        </li>
-      </ul>
       <div className='select'>
         <select onChange={(e: any) => switchChannel(e.target.value, 'left')}>
           <option value={0}>Channel 0</option>
@@ -109,9 +97,8 @@ const Settings: React.FC<PlotProp> = ({ data, streamTimeDomains, endStream, swit
         </select>
       </div>
       <VegaLite spec={spec} onNewView={(view) => setView(view)} />
-      <p>{(new Date(currentTime)).toTimeString()}</p>
     </div>
   )
 }
 
-export default Settings
+export default Graph
