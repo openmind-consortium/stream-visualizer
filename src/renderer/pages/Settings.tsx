@@ -94,7 +94,7 @@ const Settings: React.FC<PlotProp> = ({ data, streamTimeDomains, endStream, swit
     <div>
       <ul>
         <li>
-          <button className='button' onClick={startData}>Stream Left</button>
+        
         </li>
         <li>
           <button className='button' onClick={()=>endStream('left')}>End Stream Left</button>
