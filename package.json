@@ -12,6 +12,9 @@
     "lint": "ts-standard"
   },
   "keywords": [],
+  "author": {
+    "name": "ivo su"
+  },
   "license": "MIT",
   "config": {
     "forge": {
