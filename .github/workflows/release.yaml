@@ -20,7 +20,10 @@ jobs:
           npm install
       - name: generate windows installer
         run: npm run make
-      - name: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+      - name: Upload app to release - windows
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out/make/squirrel.windows/x64/omnivisualizer-*Setup.exe
+          asset_name: omnivisualizer-setup.exe
+          tag: ${{ github.ref }}
