@@ -1,0 +1,24 @@
+name: Package Electron
+on: pull_request
+jobs:
+  build:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: npm install
+        shell: bash
+        run: |
+          npm install -g npm
+          npm install
+      - name: generate windows installer
+        run: npm run make
+      - name: upload windows installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-installer
+          path: out/make/squirrel.windows/x64

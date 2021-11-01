@@ -1,0 +1,27 @@
+name: Package Electron
+on:
+  workflow_run:
+    workflows: ["Bump Version"]
+    types: [completed]
+jobs:
+  release:
+    runs-on: windows-2019
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-node@v2
+        with: 
+          node-version: '14'
+      - name: npm install
+        shell: bash
+        run: |
+          npm install -g npm
+          npm install
+      - name: generate windows installer
+        run: npm run make
+      - name: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

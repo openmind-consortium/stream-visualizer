@@ -112,14 +112,10 @@ const App: React.FC = () => {
   return (
     <Router>
       <div id="app-container">
-        <Header />
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
-          <div id='sidebar'>
-            <Logo />
-            <Navigation />
-          </div>
+          
           {/* Main area */}
           <div id='main-window'>
             <Switch>

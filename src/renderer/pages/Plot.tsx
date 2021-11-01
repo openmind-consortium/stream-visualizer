@@ -54,11 +54,12 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
 
   const startLeftData = () => {
     streamTimeDomains("left")
+    streamTimeDomains("right")
     var currentLeftData: any = { data: [] }
     // Frequency of data display
     const dataSize = 5
     function updateLeftGraph() {
-      
+
       setCurrentTime((leftStartValues.currentPacketTime + 978307200) * 1000)
       // Check if there's data from stream
       if (leftData.length > 0) {
@@ -87,7 +88,7 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
         }
       }
     }
-    streamTimeDomains("right")
+
     var currentRightData: any = { data: [] }
     // Frequency of data display
     function updateRightGraph() {
@@ -120,33 +121,61 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
     if (leftView) {
       updateLeftGraph();
       updateRightGraph()
-      setInterval(()=>{updateLeftGraph(); updateRightGraph()}, 1000 / 250 * dataSize -2);
+      setInterval(() => { updateLeftGraph(); updateRightGraph() }, 1000 / 250 * dataSize - 2);
     }
   }
-  
 
-  
+
+
   return (
     <div>
-      <ul>
-        <li>
-          <button className='button' onClick={()=>{startLeftData();}}>Stream Left</button>
-        </li>
-        <li>
-          <button className='button' onClick={()=>{endStream('left'); endStream('right')}}>End Stream Left</button>
-        </li>
-      </ul>
-      <div className='select'>
-        <select onChange={(e: any) => switchChannel(e.target.value, 'left')}>
-          <option value={0}>Channel 0</option>
-          <option value={1}>Channel 1</option>
-          <option value={2}>Channel 2</option>
-          <option value={3}>Channel 3</option>
-        </select>
+      <div>
+        <ul>
+          <li>
+            <button className='button' onClick={() => { startLeftData(); }}>Stream</button>
+          </li>
+          <li>
+            <button className='button' onClick={() => { endStream('left'); endStream('right') }}>End Stream</button>
+          </li>
+        </ul>
       </div>
-      <VegaLite spec={spec} onNewView={(view) => setLeftView(view)} />
-      <VegaLite spec={spec} onNewView={(view) => setRightView(view)} />
-      <p>{(new Date(currentTime)).toTimeString()}</p>
+
+      <div>
+      <br></br>
+      <p className="title is-5 is-centered">Left</p>
+        <div className='level'>
+          
+          <div className='level-item'>
+            <div className='select'>
+              <select onChange={(e: any) => switchChannel(e.target.value, 'left')}>
+                <option value={0}>Channel 0</option>
+                <option value={1}>Channel 1</option>
+                <option value={2}>Channel 2</option>
+                <option value={3}>Channel 3</option>
+              </select>
+            </div>
+          </div>
+
+          <VegaLite className='level-item' spec={spec} onNewView={(view) => setLeftView(view)} />
+        </div>
+        <p className="title is-5 is-centered">Right</p>
+        <div className='level'>
+        
+          <div className='level-item'>
+            <div className='select'>
+              <select onChange={(e: any) => switchChannel(e.target.value, 'right')}>
+                <option value={0}>Channel 0</option>
+                <option value={1}>Channel 1</option>
+                <option value={2}>Channel 2</option>
+                <option value={3}>Channel 3</option>
+              </select>
+            </div>
+          </div>
+
+          <VegaLite className='level-item' spec={spec} onNewView={(view) => setRightView(view)} />
+        </div>
+      </div>
+
     </div>
   )
 }
