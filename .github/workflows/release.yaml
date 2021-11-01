@@ -1,8 +1,8 @@
 name: Package Electron
 on:
-  workflow_run:
-    workflows: ["Bump Version"]
-    types: [completed]
+  push:
+    tags:
+      - '*'
 jobs:
   release:
     runs-on: windows-2019
