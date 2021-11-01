@@ -27,7 +27,8 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "omnivisualizer"
+            "name": "omnivisualizer",
+            "exe": "omnivisualizer.exe"
           }
         },
         {
