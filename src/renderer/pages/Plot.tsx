@@ -54,14 +54,17 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
   const [currentLeftTime, setCurrentLeftTime] = React.useState<any>()
   const [currentRightTime, setCurrentRightTime] = React.useState<any>()
 
+  const [streaming, setStreaming] = React.useState<boolean>(false)
+  const [resolution, setResolution] = React.useState<number>(50)
 
-  const startLeftData = () => {
+  const startData = () => {
+    setStreaming(true)
     streamTimeDomains("left")
     streamTimeDomains("right")
     var currentLeftData: any = { data: [] }
     // Frequency of data display
-    const leftDataSize = leftSampleRate/50
-    const rightDataSize = rightSampleRate/50
+    const leftDataSize = leftSampleRate/resolution
+    const rightDataSize = rightSampleRate/resolution
     function updateLeftGraph() {
       if (leftStartValues.currentPacketTime!==-100)
         setCurrentLeftTime((leftStartValues.currentPacketTime + 978307200) * 1000)
@@ -136,8 +139,9 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
   return (
     <div>
       <div>
-        <button className='button is-primary m-2' onClick={() => { startLeftData(); }}>Stream</button>
+        <button className='button is-primary m-2' onClick={() => { startData(); }}>Stream</button>
         <button className='button is-danger m-2' onClick={() => { endStream('left'); endStream('right') }}>End Stream</button>
+        <button className='button m-2 ml-6' onClick={()=>setResolution(10)} disabled={streaming}>Lower Resolution</button>
       </div>
       <div>
         <br></br>
