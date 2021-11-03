@@ -100,27 +100,12 @@ ipcMain.handle('get-bridges', (event, request: any) => {
   logScope.info('recieved get-bridges')
   logScope.info(`request ${inspect(request)}`)
   const leftBridge = config.left.name.split("/device")[0]
+  const leftSampleRate = config.left.config.Sense.TDSampleRate
   const rightBridge = config.right.name.split("/device")[0]
-  return {left: leftBridge, right: rightBridge}
+  const rightSampleRate = config.right.config.Sense.TDSampleRate
+  return {left: leftBridge, leftSampleRate: leftSampleRate, right: rightBridge, rightSampleRate: rightSampleRate}
 })
 
-ipcMain.handle('list-bridges', async (event, request: any) => {
-  const logScope = log.scope('list-bridges')
-  logScope.info('recieved list-bridges')
-  logScope.info(`request ${inspect(request)}`)
-  return await new Promise((resolve, reject) => {
-    bridgeClient.listBridges(request, (err: Error, resp: any) => {
-      logScope.debug('in callback')
-      if (err) {
-        logScope.error(err)
-        return reject(err)
-      }
-
-      logScope.info(`response ${inspect(resp)}`)
-      return resolve(resp)
-    })
-  })
-})
 
 ipcMain.on('stream-timedomains', async (event, request) => {
   const logScope = log.scope('stream-timedomains')

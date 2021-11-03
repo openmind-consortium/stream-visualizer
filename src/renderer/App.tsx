@@ -48,7 +48,6 @@ const App: React.FC = () => {
 
   const endStream = async (direction: string) => {
     mywindow.deviceManagerService.streamTimeDomains({ name: direction === 'left' ? bridges.left : bridges.right, enableStream: false }, console.log)
-    await new Promise(r => setTimeout(r, 1000));
     mywindow.location.reload(false)
   }
 
@@ -65,47 +64,48 @@ const App: React.FC = () => {
 
     // which device
     const device = direction === 'left' ? bridges.left : bridges.right
+    const sampleRate = direction === 'left'? bridges.leftSampleRate : bridges.rightSampleRate
     const displayData = direction === 'left' ? leftData : rightData
     const displayStartValues = direction === 'left' ? leftStartValues : rightStartValues
     const setDisplayStartValues = direction === 'left' ? setLeftStartValues : setRightStartValues
 
-    if (streamData.name.includes(device)){
+    if (streamData.name.includes(device)) {
       // store current packet time and packet number
-    const packetTime = streamData.header.insTimestamp
-    const packetNumber = streamData.header.dataTypeSequenceNumber
-    // packets overflow at 255
-    var packetDifference = packetNumber - displayStartValues.packetNumber
-    if (packetDifference < 0) {
-      packetDifference += 254
-    }
-    displayData.unshift({ data: [] })
-    for (let i = 0; i < 25; i++) {
-      displayData[0].data.push({ key: streamData.data[channel].channelId, time: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / 250, channelData: streamData.data[channel].channelData[i] })
-    }
-    // case for same time interval
-    if (packetTime - displayStartValues.startTime < 10) {
-      // case for same second
-      if (packetTime !== displayStartValues.currentPacketTime) {
+      const packetTime = streamData.header.insTimestamp
+      const packetNumber = streamData.header.dataTypeSequenceNumber
+      // packets overflow at 255
+      var packetDifference = packetNumber - displayStartValues.packetNumber
+      if (packetDifference < 0) {
+        packetDifference += 254
+      }
+      displayData.unshift({ data: [] })
+      for (let i = 0; i < sampleRate/10; i++) {
+        displayData[0].data.push({ key: streamData.data[channel].channelId, time: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / sampleRate, channelData: streamData.data[channel].channelData[i] })
+      }
+      // case for same time interval
+      if (packetTime - displayStartValues.startTime < 10) {
+        // case for same second
+        if (packetTime !== displayStartValues.currentPacketTime) {
+          setDisplayStartValues((prev: any) => {
+            prev.packetNumber = packetNumber
+            prev.currentPacketTime = packetTime
+            return prev
+          })
+        }
+      }
+      // case for outside time interval
+      else {
         setDisplayStartValues((prev: any) => {
+          prev.startTime = packetTime
           prev.packetNumber = packetNumber
           prev.currentPacketTime = packetTime
           return prev
         })
       }
+      console.log(rightData)
+      console.log(leftData)
     }
-    // case for outside time interval
-    else {
-      setDisplayStartValues((prev: any) => {
-        prev.startTime = packetTime
-        prev.packetNumber = packetNumber
-        prev.currentPacketTime = packetTime
-        return prev
-      })
-    }
-    console.log(rightData)
-    console.log(leftData)
-    }
-    
+
   }
 
 
@@ -115,7 +115,7 @@ const App: React.FC = () => {
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
-          
+
           {/* Main area */}
           <div id='main-window'>
             <Switch>
@@ -130,7 +130,7 @@ const App: React.FC = () => {
                 <Home streamTimeDomains={streamTimeDomains} endStream={endStream} />
               </Route>
               <Route path='/'>
-                <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} />
+                <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} leftSampleRate={bridges.leftSampleRate} rightSampleRate={bridges.rightSampleRate}/>
               </Route>
             </Switch>
           </div>
