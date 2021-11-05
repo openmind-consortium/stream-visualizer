@@ -11,9 +11,7 @@ interface PlotProp {
   endStream: any,
   switchChannel: any,
   leftStartValues: any,
-  rightStartValues: any,
-  leftSampleRate: number,
-  rightSampleRate: number
+  rightStartValues: any
 }
 
 const spec: VisualizationSpec = {
@@ -26,7 +24,7 @@ const spec: VisualizationSpec = {
   data: { name: 'data' },
   encoding: {
     x: {
-      field: 'time',
+      field: 'x',
       type: 'quantitative',
       scale: { domain: [0, 10] },
       axis: {
@@ -34,7 +32,7 @@ const spec: VisualizationSpec = {
       }
     },
     y: {
-      field: 'channelData',
+      field: 'y',
       type: 'quantitative',
       scale: { domain: [-0.5, 0] },
       axis: {
@@ -48,7 +46,7 @@ const spec: VisualizationSpec = {
 
 
 
-const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endStream, switchChannel, leftStartValues, rightStartValues, leftSampleRate, rightSampleRate }) => {
+const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endStream, switchChannel, leftStartValues, rightStartValues }) => {
   const [leftView, setLeftView] = React.useState<View>();
   const [rightView, setRightView] = React.useState<View>();
   const [currentLeftTime, setCurrentLeftTime] = React.useState<any>()
@@ -61,13 +59,13 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
     setStreaming(true)
     streamTimeDomains("left")
     streamTimeDomains("right")
+    const incomingDataSize = 10
     var currentLeftData: any = { data: [] }
     // Frequency of data display
-    const leftDataSize = leftSampleRate/resolution
-    const rightDataSize = rightSampleRate/resolution
+    const leftDataSize = incomingDataSize*10/resolution
+    const rightDataSize = incomingDataSize*10/resolution
     function updateLeftGraph() {
-      if (leftStartValues.currentPacketTime!==-100)
-        setCurrentLeftTime((leftStartValues.currentPacketTime + 978307200) * 1000)
+      
       // Check if there's data from stream
       if (leftData.length > 0) {
         // Check if data for the current second is finished
@@ -89,18 +87,19 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
             .changeset()
             .insert(current)
             .remove((t: any) => {
-              return t.time >= current[0].time
+              return t.x >= current[0].x
             })
           leftView.change('data', cs).run();
         }
       }
+      if (leftStartValues.currentPacketTime!==-100)
+        setCurrentLeftTime((leftStartValues.currentPacketTime + 952037690) * 1000)
     }
 
     var currentRightData: any = { data: [] }
     // Frequency of data display
     function updateRightGraph() {
-      if (rightStartValues.currentPacketTime!==-100)
-        setCurrentRightTime((rightStartValues.currentPacketTime + 952037690) * 1000)
+      
       // Check if there's data from stream
       if (rightData.length > 0) {
         // Check if data for the current second is finished
@@ -121,16 +120,18 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
             .changeset()
             .insert(current)
             .remove((t: any) => {
-              return t.time >= current[0].time
+              return t.x >= current[0].x
             })
           rightView.change('data', cs).run();
         }
       }
+      if (rightStartValues.currentPacketTime!==-100)
+        setCurrentRightTime((rightStartValues.currentPacketTime + 952037690) * 1000)
     }
     if (leftView) {
       updateLeftGraph();
       updateRightGraph()
-      setInterval(() => { updateLeftGraph(); updateRightGraph() }, 1000 / rightSampleRate * rightDataSize - 2);
+      setInterval(() => { updateLeftGraph(); updateRightGraph() }, 1000 / (incomingDataSize*10) * rightDataSize-2);
     }
   }
 

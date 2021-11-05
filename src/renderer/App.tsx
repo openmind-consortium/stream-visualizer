@@ -4,6 +4,7 @@ import {
   Switch,
   Route
 } from 'react-router-dom'
+import {LTD} from 'downsample'
 
 import Home from './pages/Home'
 import Help from './pages/Help'
@@ -78,10 +79,23 @@ const App: React.FC = () => {
       if (packetDifference < 0) {
         packetDifference += 254
       }
+
+      //const downSampledData = LTD(streamData.data[channel].channelData, 50)
       displayData.unshift({ data: [] })
-      for (let i = 0; i < sampleRate/10; i++) {
-        displayData[0].data.push({ key: streamData.data[channel].channelId, time: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / sampleRate, channelData: streamData.data[channel].channelData[i] })
+      for (let i = 0; i < streamData.data[channel].channelData.length; i++) {
+        displayData[0].data.push({ key: streamData.data[channel].channelId, x: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / (streamData.data[channel].channelData.length*10), y: streamData.data[channel].channelData[i] })
       }
+      if (displayData[0].data.length>10){
+        try{
+          displayData[0].data=LTD(displayData[0].data, 10)
+        }
+        catch{
+        }
+      }
+      else{
+        displayData[0].data=[]
+      }
+        
       // case for same time interval
       if (packetTime - displayStartValues.startTime < 10) {
         // case for same second
@@ -130,7 +144,7 @@ const App: React.FC = () => {
                 <Home streamTimeDomains={streamTimeDomains} endStream={endStream} />
               </Route>
               <Route path='/'>
-                <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} leftSampleRate={bridges.leftSampleRate} rightSampleRate={bridges.rightSampleRate}/>
+                <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} />
               </Route>
             </Switch>
           </div>
