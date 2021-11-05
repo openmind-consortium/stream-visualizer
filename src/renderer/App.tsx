@@ -87,6 +87,7 @@ const App: React.FC = () => {
       }
       if (displayData[0].data.length>10){
         try{
+          // incoming data size
           displayData[0].data=LTD(displayData[0].data, 10)
         }
         catch{
@@ -116,8 +117,8 @@ const App: React.FC = () => {
           return prev
         })
       }
-      console.log(rightData)
-      console.log(leftData)
+      //console.log(rightData)
+      //console.log(leftData)
     }
 
   }

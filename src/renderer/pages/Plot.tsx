@@ -72,7 +72,6 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
         if (currentLeftData.data.length === 0) {
           // Retrieve next second data from stream
           currentLeftData = leftData.pop()
-          console.log(currentLeftData)
         }
 
         if (leftView) {
