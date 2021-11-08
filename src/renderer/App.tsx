@@ -6,14 +6,7 @@ import {
 } from 'react-router-dom'
 import {LTD} from 'downsample'
 
-import Home from './pages/Home'
-import Help from './pages/Help'
 import Plot from './pages/Plot'
-import Settings from './pages/Settings'
-
-import Logo from './components/Logo'
-import Header from './components/Header'
-import Navigation from './components/Navigation'
 
 // HACK (BNR): I don't know what the right way to get bridgeManagerService on
 //             the window object. This is a hack around ts-compiler warnings
@@ -134,16 +127,6 @@ const App: React.FC = () => {
           {/* Main area */}
           <div id='main-window'>
             <Switch>
-
-              <Route path='/settings'>
-                <Settings data={leftData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} startValues={leftStartValues} />
-              </Route>
-              <Route path='/help'>
-                <Help />
-              </Route>
-              <Route path='/plot'>
-                <Home streamTimeDomains={streamTimeDomains} endStream={endStream} />
-              </Route>
               <Route path='/'>
                 <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} />
               </Route>
