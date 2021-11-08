@@ -22,9 +22,15 @@ const spec: VisualizationSpec = {
   width: 600,
   padding: 50,
   data: { name: 'data' },
+  params: [
+    { name: "minYRange", value: -0.5,
+      bind: {input: "range", min: -10, max: -0.5, step: 0.5} },
+    { name: "maxYRange", value: 0,
+      bind: {input: "range", min: 0, max: 10, step: 0.5} }
+  ],
   encoding: {
     x: {
-      field: 'time',
+      field: 'x',
       type: 'quantitative',
       scale: { domain: [0, 10] },
       axis: {
@@ -32,9 +38,9 @@ const spec: VisualizationSpec = {
       }
     },
     y: {
-      field: 'channelData',
+      field: 'y',
       type: 'quantitative',
-      scale: { domain: [-0.5, 0] },
+      scale: { domain: [{expr: "minYRange"}, {expr: "maxYRange"}] },
       axis: {
         title: 'channel data (mV)'
       }
@@ -49,32 +55,38 @@ const spec: VisualizationSpec = {
 const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endStream, switchChannel, leftStartValues, rightStartValues }) => {
   const [leftView, setLeftView] = React.useState<View>();
   const [rightView, setRightView] = React.useState<View>();
-  const [intervalId, setIntervalId] = React.useState<any>()
-  const [currentTime, setCurrentTime] = React.useState<any>()
+  const [currentLeftTime, setCurrentLeftTime] = React.useState<any>()
+  const [currentRightTime, setCurrentRightTime] = React.useState<any>()
 
-  const startLeftData = () => {
+  const [streaming, setStreaming] = React.useState<boolean>(false)
+  const [resolution, setResolution] = React.useState<number>(50)
+
+
+
+  const startData = () => {
+    setStreaming(true)
     streamTimeDomains("left")
     streamTimeDomains("right")
+    const incomingDataSize = 10
     var currentLeftData: any = { data: [] }
     // Frequency of data display
-    const dataSize = 5
+    const leftDataSize = incomingDataSize*10/resolution
+    const rightDataSize = incomingDataSize*10/resolution
     function updateLeftGraph() {
-
-      setCurrentTime((leftStartValues.currentPacketTime + 978307200) * 1000)
+      
       // Check if there's data from stream
       if (leftData.length > 0) {
         // Check if data for the current second is finished
         if (currentLeftData.data.length === 0) {
           // Retrieve next second data from stream
           currentLeftData = leftData.pop()
-          console.log(currentLeftData)
         }
 
         if (leftView) {
           // Array of data points to add to graph
           var current: any[] = []
-          if (currentLeftData.data.length > dataSize)
-            current = currentLeftData.data.splice(0, dataSize)
+          if (currentLeftData.data.length > leftDataSize)
+            current = currentLeftData.data.splice(0, leftDataSize)
           else {
             current = currentLeftData.data.splice(0, currentLeftData.data.length)
           }
@@ -82,16 +94,19 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
             .changeset()
             .insert(current)
             .remove((t: any) => {
-              return t.time >= current[0].time
+              return t.x >= current[0].x
             })
           leftView.change('data', cs).run();
         }
       }
+      if (leftStartValues.currentPacketTime!==-100)
+        setCurrentLeftTime((leftStartValues.currentPacketTime + 952037690) * 1000)
     }
 
     var currentRightData: any = { data: [] }
     // Frequency of data display
     function updateRightGraph() {
+      
       // Check if there's data from stream
       if (rightData.length > 0) {
         // Check if data for the current second is finished
@@ -103,8 +118,8 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
         if (rightView) {
           // Array of data points to add to graph
           var current: any[] = []
-          if (currentRightData.data.length > dataSize)
-            current = currentRightData.data.splice(0, dataSize)
+          if (currentRightData.data.length > rightDataSize)
+            current = currentRightData.data.splice(0, rightDataSize)
           else {
             current = currentRightData.data.splice(0, currentRightData.data.length)
           }
@@ -112,16 +127,18 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
             .changeset()
             .insert(current)
             .remove((t: any) => {
-              return t.time >= current[0].time
+              return t.x >= current[0].x
             })
           rightView.change('data', cs).run();
         }
       }
+      if (rightStartValues.currentPacketTime!==-100)
+        setCurrentRightTime((rightStartValues.currentPacketTime + 952037690) * 1000)
     }
     if (leftView) {
       updateLeftGraph();
       updateRightGraph()
-      setInterval(() => { updateLeftGraph(); updateRightGraph() }, 1000 / 250 * dataSize - 2);
+      setInterval(() => { updateLeftGraph(); updateRightGraph() }, 1000 / (incomingDataSize*10) * rightDataSize-2);
     }
   }
 
@@ -130,22 +147,18 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
   return (
     <div>
       <div>
-        <ul>
-          <li>
-            <button className='button' onClick={() => { startLeftData(); }}>Stream</button>
-          </li>
-          <li>
-            <button className='button' onClick={() => { endStream('left'); endStream('right') }}>End Stream</button>
-          </li>
-        </ul>
+        <button className='button is-primary m-2' onClick={() => { startData(); }}>Stream</button>
+        <button className='button is-danger m-2' onClick={() => { endStream('left'); endStream('right') }}>End Stream</button>
+        <button className='button m-2 ml-6' onClick={()=>setResolution(10)} disabled={streaming}>Lower Resolution</button>
       </div>
-
       <div>
-      <br></br>
-      <p className="title is-5 is-centered">Left</p>
+        <br></br>
+        <div className='level has-text-centered m-2'>
+          <p className="title is-4 m-2">Left</p>
+          <p>{currentLeftTime? new Date(currentLeftTime).toTimeString() :''}</p>
+        </div>
         <div className='level'>
-          
-          <div className='level-item'>
+          <div className='level-item m-2'>
             <div className='select'>
               <select onChange={(e: any) => switchChannel(e.target.value, 'left')}>
                 <option value={0}>Channel 0</option>
@@ -155,13 +168,17 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
               </select>
             </div>
           </div>
-
+        
           <VegaLite className='level-item' spec={spec} onNewView={(view) => setLeftView(view)} />
         </div>
-        <p className="title is-5 is-centered">Right</p>
+        <div className='level has-text-centered m-2'>
+          <p className="title is-4 m-2">Right</p>
+          <p>{currentRightTime? new Date(currentRightTime).toTimeString():''}</p>
+        </div>
+
         <div className='level'>
-        
-          <div className='level-item'>
+
+          <div className='level-item m-2'>
             <div className='select'>
               <select onChange={(e: any) => switchChannel(e.target.value, 'right')}>
                 <option value={0}>Channel 0</option>
@@ -175,7 +192,6 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
           <VegaLite className='level-item' spec={spec} onNewView={(view) => setRightView(view)} />
         </div>
       </div>
-
     </div>
   )
 }

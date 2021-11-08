@@ -27,7 +27,8 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "omnivisualizer"
+            "name": "omnivisualizer",
+            "exe": "omnivisualizer.exe"
           }
         },
         {
@@ -77,6 +78,7 @@
     "@typescript-eslint/eslint-plugin": "^4.0.1",
     "@typescript-eslint/parser": "^4.0.1",
     "css-loader": "^4.2.1",
+    "cz-conventional-changelog": "^3.3.0",
     "electron": "12.0.6",
     "fork-ts-checker-webpack-plugin": "^5.0.14",
     "node-loader": "^1.0.1",
@@ -89,6 +91,7 @@
     "@grpc/grpc-js": "^1.3.0",
     "@grpc/proto-loader": "^0.6.1",
     "bulma": "^0.9.3",
+    "downsample": "^1.4.0",
     "electron-log": "^4.4.1",
     "electron-squirrel-startup": "^1.0.0",
     "hacktimer": "^1.1.3",
@@ -100,33 +103,5 @@
     "styled-components": "^5.3.0",
     "vega": "^5.21.0",
     "vega-lite": "^5.1.1"
-  },
-  "release": {
-    "branches": [
-      "main"
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/github",
-        {
-          "assets": [
-            {
-              "path": "out/make/squirrel.windows/x64/RELEASES",
-              "label": "RELEASES"
-            },
-            {
-              "path": "out/make/squirrel.windows/x64/omnivisualizer-*-full.nupkg",
-              "label": "omnivisualizer.nupkg"
-            },
-            {
-              "path": "out/make/squirrel.windows/x64/omnivisualizer-*Setup.exe",
-              "label": "omnivisualizer-setup.exe"
-            }
-          ]
-        }
-      ]
-    ]
   }
 }

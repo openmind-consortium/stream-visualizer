@@ -4,15 +4,9 @@ import {
   Switch,
   Route
 } from 'react-router-dom'
+import {LTD} from 'downsample'
 
-import Home from './pages/Home'
-import Help from './pages/Help'
 import Plot from './pages/Plot'
-import Settings from './pages/Settings'
-
-import Logo from './components/Logo'
-import Header from './components/Header'
-import Navigation from './components/Navigation'
 
 // HACK (BNR): I don't know what the right way to get bridgeManagerService on
 //             the window object. This is a hack around ts-compiler warnings
@@ -48,7 +42,6 @@ const App: React.FC = () => {
 
   const endStream = async (direction: string) => {
     mywindow.deviceManagerService.streamTimeDomains({ name: direction === 'left' ? bridges.left : bridges.right, enableStream: false }, console.log)
-    await new Promise(r => setTimeout(r, 1000));
     mywindow.location.reload(false)
   }
 
@@ -65,47 +58,62 @@ const App: React.FC = () => {
 
     // which device
     const device = direction === 'left' ? bridges.left : bridges.right
+    const sampleRate = direction === 'left'? bridges.leftSampleRate : bridges.rightSampleRate
     const displayData = direction === 'left' ? leftData : rightData
     const displayStartValues = direction === 'left' ? leftStartValues : rightStartValues
     const setDisplayStartValues = direction === 'left' ? setLeftStartValues : setRightStartValues
 
-    if (streamData.name.includes(device)){
+    if (streamData.name.includes(device)) {
       // store current packet time and packet number
-    const packetTime = streamData.header.insTimestamp
-    const packetNumber = streamData.header.dataTypeSequenceNumber
-    // packets overflow at 255
-    var packetDifference = packetNumber - displayStartValues.packetNumber
-    if (packetDifference < 0) {
-      packetDifference += 254
-    }
-    displayData.unshift({ data: [] })
-    for (let i = 0; i < 25; i++) {
-      displayData[0].data.push({ key: streamData.data[channel].channelId, time: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / 250, channelData: streamData.data[channel].channelData[i] })
-    }
-    // case for same time interval
-    if (packetTime - displayStartValues.startTime < 10) {
-      // case for same second
-      if (packetTime !== displayStartValues.currentPacketTime) {
+      const packetTime = streamData.header.insTimestamp
+      const packetNumber = streamData.header.dataTypeSequenceNumber
+      // packets overflow at 255
+      var packetDifference = packetNumber - displayStartValues.packetNumber
+      if (packetDifference < 0) {
+        packetDifference += 254
+      }
+
+      //const downSampledData = LTD(streamData.data[channel].channelData, 50)
+      displayData.unshift({ data: [] })
+      for (let i = 0; i < streamData.data[channel].channelData.length; i++) {
+        displayData[0].data.push({ key: streamData.data[channel].channelId, x: displayStartValues.currentPacketTime - displayStartValues.startTime + 1 / 10 * packetDifference + i / (streamData.data[channel].channelData.length*10), y: streamData.data[channel].channelData[i] })
+      }
+      if (displayData[0].data.length>10){
+        try{
+          // incoming data size
+          displayData[0].data=LTD(displayData[0].data, 10)
+        }
+        catch{
+        }
+      }
+      else{
+        displayData[0].data=[]
+      }
+        
+      // case for same time interval
+      if (packetTime - displayStartValues.startTime < 10) {
+        // case for same second
+        if (packetTime !== displayStartValues.currentPacketTime) {
+          setDisplayStartValues((prev: any) => {
+            prev.packetNumber = packetNumber
+            prev.currentPacketTime = packetTime
+            return prev
+          })
+        }
+      }
+      // case for outside time interval
+      else {
         setDisplayStartValues((prev: any) => {
+          prev.startTime = packetTime
           prev.packetNumber = packetNumber
           prev.currentPacketTime = packetTime
           return prev
         })
       }
+      //console.log(rightData)
+      //console.log(leftData)
     }
-    // case for outside time interval
-    else {
-      setDisplayStartValues((prev: any) => {
-        prev.startTime = packetTime
-        prev.packetNumber = packetNumber
-        prev.currentPacketTime = packetTime
-        return prev
-      })
-    }
-    console.log(rightData)
-    console.log(leftData)
-    }
-    
+
   }
 
 
@@ -115,20 +123,10 @@ const App: React.FC = () => {
         {/* Container for body other than header */}
         <div id='main-container'>
           {/* Sidebar */}
-          
+
           {/* Main area */}
           <div id='main-window'>
             <Switch>
-
-              <Route path='/settings'>
-                <Settings data={leftData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} startValues={leftStartValues} />
-              </Route>
-              <Route path='/help'>
-                <Help />
-              </Route>
-              <Route path='/plot'>
-                <Home streamTimeDomains={streamTimeDomains} endStream={endStream} />
-              </Route>
               <Route path='/'>
                 <Plot leftData={leftData} rightData={rightData} streamTimeDomains={streamTimeDomains} endStream={endStream} switchChannel={switchChannel} leftStartValues={leftStartValues} rightStartValues={rightStartValues} />
               </Route>
