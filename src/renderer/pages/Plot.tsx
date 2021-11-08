@@ -22,6 +22,12 @@ const spec: VisualizationSpec = {
   width: 600,
   padding: 50,
   data: { name: 'data' },
+  params: [
+    { name: "minYRange", value: -0.5,
+      bind: {input: "range", min: -10, max: -0.5, step: 0.5} },
+    { name: "maxYRange", value: 0,
+      bind: {input: "range", min: 0, max: 10, step: 0.5} }
+  ],
   encoding: {
     x: {
       field: 'x',
@@ -34,7 +40,7 @@ const spec: VisualizationSpec = {
     y: {
       field: 'y',
       type: 'quantitative',
-      scale: { domain: [-0.5, 0] },
+      scale: { domain: [{expr: "minYRange"}, {expr: "maxYRange"}] },
       axis: {
         title: 'channel data (mV)'
       }
@@ -54,6 +60,8 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
 
   const [streaming, setStreaming] = React.useState<boolean>(false)
   const [resolution, setResolution] = React.useState<number>(50)
+
+
 
   const startData = () => {
     setStreaming(true)
@@ -146,7 +154,7 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
       <div>
         <br></br>
         <div className='level has-text-centered m-2'>
-          <p className="title is-5 m-2">Left</p>
+          <p className="title is-4 m-2">Left</p>
           <p>{currentLeftTime? new Date(currentLeftTime).toTimeString() :''}</p>
         </div>
         <div className='level'>
@@ -160,11 +168,11 @@ const Plot: React.FC<PlotProp> = ({ leftData, rightData, streamTimeDomains, endS
               </select>
             </div>
           </div>
-
+        
           <VegaLite className='level-item' spec={spec} onNewView={(view) => setLeftView(view)} />
         </div>
         <div className='level has-text-centered m-2'>
-          <p className="title is-5 m-2">Right</p>
+          <p className="title is-4 m-2">Right</p>
           <p>{currentRightTime? new Date(currentRightTime).toTimeString():''}</p>
         </div>
 
