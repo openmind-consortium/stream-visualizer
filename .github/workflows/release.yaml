@@ -13,6 +13,9 @@ jobs:
       - uses: actions/setup-node@v2
         with: 
           node-version: '14'
+      - name: Set package version and name
+        uses: brown-ccv/gh-actions/get-package-info@main
+        id: package_info
       - name: npm install
         shell: bash
         run: |
@@ -24,6 +27,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: out/make/squirrel.windows/x64/"omnivisualizer-* Setup.exe"
+          file: out/make/squirrel.windows/x64/omnivisualizer-${{ steps.package_info.outputs.package_version }} Setup.exe
           asset_name: omnivisualizer-setup.exe
           tag: ${{ github.ref }}
