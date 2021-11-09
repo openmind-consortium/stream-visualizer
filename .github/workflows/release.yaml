@@ -24,6 +24,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: out/make/squirrel.windows/x64/omnivisualizer-* Setup.exe
+          file: out/make/squirrel.windows/x64/"omnivisualizer-* Setup.exe"
           asset_name: omnivisualizer-setup.exe
           tag: ${{ github.ref }}
